@@ -138,7 +138,7 @@ class ORM(object):
     def get_model(self, table_name):
         return self.BASE._decl_class_registry.get(table_name)
 
-    def create(self, entity, data):
+    def create(self, entity, data, return_existing=False):
         """Create the given entity type using given data.
 
         Parameters
@@ -147,15 +147,28 @@ class ORM(object):
             The entity type to create
         data : dict
             A dictionary containing data to create new record with
+        return_existing : bool
+            flag to first perform query to see if matching record already exists, and return early
 
         Returns
         -------
         magla.core.entity.MaglaEntity
             A `MaglaEntity` from the newly created record
         """
+        if return_existing:
+            qresult = self.query(entity, data)
+            if qresult.count():
+                existing_record = qresult.first()
+                self.LOGGER.warning("`return_existing` flag set, returning existing record: {existing_record}".format(existing_record=existing_record))
+                return existing_record
+
+        # create new record with given data
         new_entity_record = entity(**data)
-        self.session.add(new_entity_record)
-        self.session.commit()
+        try:
+            self.session.add(new_entity_record)
+            self.session.commit()
+        except Exception as err:
+            print(err.__class__.__name__)
         self.LOGGER.info("Creating {}".format(new_entity_record))
         self.LOGGER.debug(new_entity_record.__dict__)
         return new_entity_record
