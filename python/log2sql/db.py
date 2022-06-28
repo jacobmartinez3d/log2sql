@@ -52,5 +52,5 @@ class DB(ORM):
         # generate an instruction-dict for `LoggingEvent` creation
         logging_event_data["user_id"] = user_record.id
         logging_event_data["logging_level_id"] = logging_level_record.id
-        self.create(LoggingEvent, logging_event_data)
+        return self.create(LoggingEvent, logging_event_data)
         

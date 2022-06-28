@@ -1,4 +1,4 @@
-"""This is the primary database interface for log2sqlite using SQLAlchemy.
+"""This is the primary database interface for log2sql using SQLAlchemy.
 
 This module is intended to serve as a generic python `CRUD` interface and should remain decoupled
 from everything else.
@@ -28,18 +28,18 @@ class ORM(object):
         "port": os.getenv("LOG2SQLITE_DB_PORT"),
         "db_name": os.getenv("LOG2SQLITE_DB_NAME"),
         "data_dir": os.getenv("LOG2SQLITE_DB_DATA_DIR"),
-        "sqlite_check_same_thread": False
+        "sqlite_check_same_thread": False,
+        "log_level": os.getenv("LOG2SQLITE_LOG_LEVEL", logging.DEBUG)
     }
     BASE = declarative_base()
     SESSION = None
     ENGINE = None
     LOGGER = logging.getLogger(__name__)
+    LOGGER.setLevel(CONFIG["log_level"])
 
-    def __init__(self, log_level=10):
+    def __init__(self):
         """Instantiate and iniliatize DB tables."""
-        self.LOGGER.setLevel(log_level)
         self._session = None
-        self.LOGGER.debug("{this.__class__.__name__} created.".format(this=self))
 
     def connect(self):
         """Perform `SQLAlchemy` initializations, create filesystem directory for `sqlite` data."""
@@ -53,6 +53,9 @@ class ORM(object):
         self._construct_session()
         self._create_all_tables()
         self._session = self.SESSION()
+    
+    def disconnect(self):
+        self.session.close()
 
     @property
     def session(self):
